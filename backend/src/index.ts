@@ -40,7 +40,7 @@ async function startServer() {
 
   app.use(
     cors({
-      origin: process.env.FRONTEND_ORIGIN || "http://localhost:5174", // Ensure this matches your frontend origin
+      origin: process.env.FRONTEND_ORIGIN || "http://localhost:5175", // Ensure this matches your frontend origin
       credentials: true,
     })
   );
