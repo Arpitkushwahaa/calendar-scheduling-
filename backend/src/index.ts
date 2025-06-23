@@ -38,8 +38,23 @@ async function startServer() {
   // Initialize Passport
   app.use(passport.initialize());
   
-  // Explicit preflight handling
+  // Explicit preflight handling for all routes
   app.options('*', cors());
+  
+  // Custom middleware to ensure CORS headers are set properly
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://calendar-scheduling-6rhl.vercel.app');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    
+    next();
+  });
   
   app.use(
     cors({
@@ -57,9 +72,21 @@ async function startServer() {
       // Removed: throw new BadRequestException("throwing async error");
       res.status(HTTPSTATUS.OK).json({
         message: "Hello from Meetly API!",
+        status: "ok",
+        environment: process.env.NODE_ENV || "development",
+        time: new Date().toISOString()
       });
     })
   );
+  
+  // Health check endpoint
+  app.get("/health", (req: Request, res: Response) => {
+    res.status(HTTPSTATUS.OK).json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
 
   // Register API routes
   app.use(`${BASE_PATH}/auth`, authRoutes);
@@ -72,10 +99,11 @@ async function startServer() {
   // Global error handler
   app.use(errorHandler);
 
-  app.listen(config.PORT, () => {
+  app.listen(config.PORT, "0.0.0.0", () => {
     console.log(
       `Server listening on port ${config.PORT} in ${config.NODE_ENV} mode`
     );
+    console.log(`Server is bound to 0.0.0.0 to accept all incoming connections`);
   });
 }
 

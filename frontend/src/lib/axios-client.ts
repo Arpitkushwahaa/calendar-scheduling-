@@ -8,7 +8,11 @@ const baseURL = ENV.VITE_API_BASE_URL;
 const options = {
   baseURL,
   withCredentials: true,
-  timeout: 10000,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+    "User-Agent": "MeetlyApp/1.0"
+  }
 };
 
 //*** FOR API WITH TOKEN */
@@ -28,7 +32,9 @@ API.interceptors.response.use(
     // Safely handle case where error.response might be undefined
     if (error.response) {
       const { data, status } = error.response;
-      if (data === "Unauthorized" && status === 401) {
+      
+      // Handle authentication errors
+      if ((data === "Unauthorized" && status === 401) || status === 403) {
         const store = useStore.getState();
         store.clearUser();
         store.clearAccessToken();
@@ -36,7 +42,7 @@ API.interceptors.response.use(
         window.location.href = "/";
       }
 
-      console.log(data, "data");
+      console.log("API Error Response:", data);
       const customError: CustomError = {
         ...error,
         message: data?.message || "Unknown error occurred",
@@ -49,7 +55,7 @@ API.interceptors.response.use(
       console.error("Network error:", error);
       const customError: CustomError = {
         ...error,
-        message: "Network error - could not connect to server",
+        message: "Network error - could not connect to server. Please try again later.",
         errorCode: "NETWORK_ERROR",
       };
       return Promise.reject(customError);
@@ -73,3 +79,14 @@ PublicAPI.interceptors.response.use(
     return Promise.reject(customError);
   }
 );
+
+// Helper function to check if the API is available
+export const checkApiHealth = async (): Promise<boolean> => {
+  try {
+    const response = await PublicAPI.get('/health');
+    return response.status === 200;
+  } catch (error) {
+    console.error('API Health check failed:', error);
+    return false;
+  }
+};
