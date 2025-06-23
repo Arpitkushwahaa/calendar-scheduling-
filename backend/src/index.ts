@@ -38,27 +38,27 @@ async function startServer() {
   // Initialize Passport
   app.use(passport.initialize());
   
-  // Explicit preflight handling for all routes
-  app.options('*', cors());
+  // Explicit preflight handling for all routes - This is now handled by the cors package
+  // app.options('*', cors()); 
   
-  // Custom middleware to ensure CORS headers are set properly
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://calendar-scheduling-6rhl.vercel.app');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
+  // Custom middleware to ensure CORS headers are set properly - This is also handled by the cors package
+  // app.use((req, res, next) => {
+  //   res.header('Access-Control-Allow-Origin', 'https://calendar-scheduling-6rhl.vercel.app');
+  //   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  //   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  //   res.header('Access-Control-Allow-Credentials', 'true');
     
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
+  //   // Handle preflight requests
+  //   if (req.method === 'OPTIONS') {
+  //     return res.status(200).end();
+  //   }
     
-    next();
-  });
+  //   next();
+  // });
   
   app.use(
     cors({
-      origin: ["https://calendar-scheduling-6rhl.vercel.app", "http://localhost:5175"], // Allow both Vercel and local development
+      origin: ["https://calendar-scheduling-6rhl.vercel.app", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"], // Allow Vercel and local development
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
       allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With", "Accept"]
@@ -115,9 +115,10 @@ async function startServer() {
   // Global error handler
   app.use(errorHandler);
 
-  app.listen(config.PORT, "0.0.0.0", () => {
+  const port = parseInt(config.PORT, 10);
+  app.listen(port, "0.0.0.0", () => {
     console.log(
-      `Server listening on port ${config.PORT} in ${config.NODE_ENV} mode`
+      `Server listening on port ${port} in ${config.NODE_ENV} mode`
     );
     console.log(`Server is bound to 0.0.0.0 to accept all incoming connections`);
   });
