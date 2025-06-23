@@ -1,4 +1,16 @@
-build:
-  command: npm install --include=dev && npm run build
-start:
-  command: npm run render-start
+services:
+  - type: web
+    name: meetly-backend
+    env: node
+    plan: free
+    region: oregon
+    rootDir: ./backend
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm run start"
+    healthCheck:
+      path: /health
+      initialDelaySeconds: 120
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - fromGroup: meetly-db-credentials
