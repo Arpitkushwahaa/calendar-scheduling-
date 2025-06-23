@@ -25,23 +25,35 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const { data, status } = error.response;
-    if (data === "Unauthorized" && status === 401) {
-      const store = useStore.getState();
-      store.clearUser();
-      store.clearAccessToken();
-      store.clearExpiresAt();
-      window.location.href = "/";
+    // Safely handle case where error.response might be undefined
+    if (error.response) {
+      const { data, status } = error.response;
+      if (data === "Unauthorized" && status === 401) {
+        const store = useStore.getState();
+        store.clearUser();
+        store.clearAccessToken();
+        store.clearExpiresAt();
+        window.location.href = "/";
+      }
+
+      console.log(data, "data");
+      const customError: CustomError = {
+        ...error,
+        message: data?.message || "Unknown error occurred",
+        errorCode: data?.errorCode || "UNKNOWN_ERROR",
+      };
+
+      return Promise.reject(customError);
+    } else {
+      // Handle network errors or CORS issues
+      console.error("Network error:", error);
+      const customError: CustomError = {
+        ...error,
+        message: "Network error - could not connect to server",
+        errorCode: "NETWORK_ERROR",
+      };
+      return Promise.reject(customError);
     }
-
-    console.log(data, "data");
-    const customError: CustomError = {
-      ...error,
-      message: data?.message,
-      errorCode: data?.errorCode || "UNKNOWN_ERROR",
-    };
-
-    return Promise.reject(customError);
   }
 );
 
@@ -51,11 +63,12 @@ export const PublicAPI = axios.create(options);
 PublicAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const { data } = error.response;
+    // Safely handle case where error.response might be undefined
+    const data = error.response?.data;
     const customError: CustomError = {
       ...error,
-      message: data?.message,
-      errorCode: data?.errorCode || "UNKNOWN_ERROR",
+      message: data?.message || "Network error occurred",
+      errorCode: data?.errorCode || "NETWORK_ERROR",
     };
     return Promise.reject(customError);
   }

@@ -37,11 +37,16 @@ async function startServer() {
 
   // Initialize Passport
   app.use(passport.initialize());
-
+  
+  // Explicit preflight handling
+  app.options('*', cors());
+  
   app.use(
     cors({
-      origin: process.env.FRONTEND_ORIGIN || "http://localhost:5175", // Ensure this matches your frontend origin
+      origin: ["https://calendar-scheduling-6rhl.vercel.app", "http://localhost:5175"], // Allow both Vercel and local development
       credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+      allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With", "Accept"]
     })
   );
 
