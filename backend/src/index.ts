@@ -95,6 +95,22 @@ async function startServer() {
   app.use(`${BASE_PATH}/integration`, integrationRoutes);
   app.use(`${BASE_PATH}/meeting`, meetingRoutes);
   app.use(`${BASE_PATH}`, zoomIntegrationRouter); // Registered Zoom router under /api (e.g. /api/auth/zoom)
+  
+  // Log all registered routes for debugging
+  console.log('Registered API routes:');
+  app._router.stack.forEach((middleware: any) => {
+    if(middleware.route){
+      console.log(`${middleware.route.path} - ${Object.keys(middleware.route.methods)}`);
+    } else if(middleware.name === 'router'){
+      middleware.handle.stack.forEach((handler: any) => {
+        if(handler.route){
+          const path = handler.route.path;
+          const methods = Object.keys(handler.route.methods);
+          console.log(`${middleware.regexp} ${path} - ${methods}`);
+        }
+      });
+    }
+  });
 
   // Global error handler
   app.use(errorHandler);
